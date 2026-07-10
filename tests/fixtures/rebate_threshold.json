@@ -1,0 +1,110 @@
+{
+  "name": "rebate-threshold",
+  "assets": [
+    {
+      "id": "usdc",
+      "symbol": "USDC",
+      "decimals": 6
+    }
+  ],
+  "accounts": [
+    {
+      "id": "shipper-norte",
+      "role": "shipper",
+      "displayName": "Norte Export Desk"
+    },
+    {
+      "id": "carrier-azul",
+      "role": "carrier",
+      "displayName": "Azul Ocean Line"
+    },
+    {
+      "id": "operator-quay",
+      "role": "operator",
+      "displayName": "Quay Settlement Ops"
+    },
+    {
+      "id": "custodian-lisbon",
+      "role": "custodian",
+      "displayName": "Lisbon Survey Agent"
+    },
+    {
+      "id": "treasury-main",
+      "role": "treasury",
+      "displayName": "Main Incentive Treasury"
+    }
+  ],
+  "steps": [
+    {
+      "action": "deposit",
+      "accountId": "shipper-norte",
+      "asset": "usdc",
+      "amount": 16000
+    },
+    {
+      "action": "deposit",
+      "accountId": "treasury-main",
+      "asset": "usdc",
+      "amount": 20000
+    },
+    {
+      "action": "create_route",
+      "routeId": "med-119",
+      "asset": "usdc",
+      "shipperId": "shipper-norte",
+      "operatorId": "operator-quay",
+      "originPort": "Valencia",
+      "destinationPort": "Alexandria",
+      "vessel": "MV Levante",
+      "billOfLading": "BOL-MED-119",
+      "rebateBudget": 500,
+      "rebateBasisBps": 400,
+      "minProgressBps": 5000,
+      "cancellationPenaltyBps": 500
+    },
+    {
+      "action": "fund_escrow",
+      "routeId": "med-119",
+      "amount": 12000
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "med-load",
+      "routeId": "med-119",
+      "sequence": 1,
+      "leg": "origin-load",
+      "location": "Valencia",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 3000,
+      "dueEpoch": 2,
+      "penaltyBps": 500
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "med-main",
+      "routeId": "med-119",
+      "sequence": 2,
+      "leg": "mainline-crossing",
+      "location": "Mediterranean",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 9000,
+      "dueEpoch": 5,
+      "penaltyBps": 500
+    },
+    {
+      "action": "issue_certificate",
+      "certificateId": "cert-med-load",
+      "routeId": "med-119",
+      "milestoneId": "med-load",
+      "custodianId": "custodian-lisbon",
+      "documentHash": "medloadcert0001"
+    },
+    {
+      "action": "release_milestone",
+      "routeId": "med-119",
+      "milestoneId": "med-load"
+    }
+  ]
+}

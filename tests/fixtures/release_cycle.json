@@ -1,0 +1,154 @@
+{
+  "name": "release-cycle",
+  "assets": [
+    {
+      "id": "usdc",
+      "symbol": "USDC",
+      "decimals": 6
+    }
+  ],
+  "accounts": [
+    {
+      "id": "shipper-norte",
+      "role": "shipper",
+      "displayName": "Norte Export Desk"
+    },
+    {
+      "id": "carrier-azul",
+      "role": "carrier",
+      "displayName": "Azul Ocean Line"
+    },
+    {
+      "id": "operator-quay",
+      "role": "operator",
+      "displayName": "Quay Settlement Ops"
+    },
+    {
+      "id": "custodian-lisbon",
+      "role": "custodian",
+      "displayName": "Lisbon Survey Agent"
+    },
+    {
+      "id": "treasury-main",
+      "role": "treasury",
+      "displayName": "Main Incentive Treasury"
+    }
+  ],
+  "steps": [
+    {
+      "action": "deposit",
+      "accountId": "shipper-norte",
+      "asset": "usdc",
+      "amount": 18000
+    },
+    {
+      "action": "deposit",
+      "accountId": "treasury-main",
+      "asset": "usdc",
+      "amount": 50000
+    },
+    {
+      "action": "create_route",
+      "routeId": "pacific-777",
+      "asset": "usdc",
+      "shipperId": "shipper-norte",
+      "operatorId": "operator-quay",
+      "originPort": "Busan",
+      "destinationPort": "Long Beach",
+      "vessel": "MV Pacific Ledger",
+      "billOfLading": "BOL-PAC-777",
+      "rebateBudget": 900,
+      "rebateBasisBps": 500,
+      "minProgressBps": 7000,
+      "cancellationPenaltyBps": 600
+    },
+    {
+      "action": "fund_escrow",
+      "routeId": "pacific-777",
+      "amount": 18000
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "pacific-load",
+      "routeId": "pacific-777",
+      "sequence": 1,
+      "leg": "origin-load",
+      "location": "Busan",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 5000,
+      "dueEpoch": 2,
+      "penaltyBps": 500
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "pacific-ocean",
+      "routeId": "pacific-777",
+      "sequence": 2,
+      "leg": "ocean-crossing",
+      "location": "Pacific",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 7000,
+      "dueEpoch": 5,
+      "penaltyBps": 600
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "pacific-discharge",
+      "routeId": "pacific-777",
+      "sequence": 3,
+      "leg": "destination-discharge",
+      "location": "Long Beach",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 6000,
+      "dueEpoch": 6,
+      "penaltyBps": 500
+    },
+    {
+      "action": "issue_certificate",
+      "certificateId": "cert-pacific-load",
+      "routeId": "pacific-777",
+      "milestoneId": "pacific-load",
+      "custodianId": "custodian-lisbon",
+      "documentHash": "9a84fbe01234load"
+    },
+    {
+      "action": "release_milestone",
+      "routeId": "pacific-777",
+      "milestoneId": "pacific-load"
+    },
+    {
+      "action": "issue_certificate",
+      "certificateId": "cert-pacific-ocean",
+      "routeId": "pacific-777",
+      "milestoneId": "pacific-ocean",
+      "custodianId": "custodian-lisbon",
+      "documentHash": "9a84fbe01234ocean"
+    },
+    {
+      "action": "release_milestone",
+      "routeId": "pacific-777",
+      "milestoneId": "pacific-ocean"
+    },
+    {
+      "action": "issue_certificate",
+      "certificateId": "cert-pacific-discharge",
+      "routeId": "pacific-777",
+      "milestoneId": "pacific-discharge",
+      "custodianId": "custodian-lisbon",
+      "documentHash": "9a84fbe01234discharge"
+    },
+    {
+      "action": "release_milestone",
+      "routeId": "pacific-777",
+      "milestoneId": "pacific-discharge"
+    },
+    {
+      "action": "claim_rebate",
+      "routeId": "pacific-777",
+      "treasuryId": "treasury-main"
+    }
+  ]
+}

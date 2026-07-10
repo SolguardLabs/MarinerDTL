@@ -1,0 +1,19 @@
+{
+  "name": "marinerdtl",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "npm run build && node --experimental-strip-types --test \"tests/node/*.test.ts\"",
+    "check": "tsc --noEmit",
+    "format": "prettier --check .",
+    "loc": "node scripts/check-loc.mjs",
+    "ci": "bash scripts/ci.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.14",
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3"
+  }
+}

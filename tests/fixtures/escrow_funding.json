@@ -1,0 +1,99 @@
+{
+  "name": "escrow-funding",
+  "assets": [
+    {
+      "id": "usdc",
+      "symbol": "USDC",
+      "decimals": 6
+    }
+  ],
+  "accounts": [
+    {
+      "id": "shipper-norte",
+      "role": "shipper",
+      "displayName": "Norte Export Desk"
+    },
+    {
+      "id": "carrier-azul",
+      "role": "carrier",
+      "displayName": "Azul Ocean Line"
+    },
+    {
+      "id": "operator-quay",
+      "role": "operator",
+      "displayName": "Quay Settlement Ops"
+    },
+    {
+      "id": "custodian-lisbon",
+      "role": "custodian",
+      "displayName": "Lisbon Survey Agent"
+    }
+  ],
+  "steps": [
+    {
+      "action": "deposit",
+      "accountId": "shipper-norte",
+      "asset": "usdc",
+      "amount": 15000
+    },
+    {
+      "action": "create_route",
+      "routeId": "atlantic-001",
+      "asset": "usdc",
+      "shipperId": "shipper-norte",
+      "operatorId": "operator-quay",
+      "originPort": "Lisbon",
+      "destinationPort": "Newark",
+      "vessel": "MV Estrela",
+      "billOfLading": "BOL-ATL-001",
+      "rebateBudget": 600,
+      "rebateBasisBps": 500,
+      "minProgressBps": 5000,
+      "cancellationPenaltyBps": 600
+    },
+    {
+      "action": "fund_escrow",
+      "routeId": "atlantic-001",
+      "amount": 12000
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "atlantic-load",
+      "routeId": "atlantic-001",
+      "sequence": 1,
+      "leg": "origin-load",
+      "location": "Lisbon",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 2500,
+      "dueEpoch": 2,
+      "penaltyBps": 500
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "atlantic-crossing",
+      "routeId": "atlantic-001",
+      "sequence": 2,
+      "leg": "ocean-crossing",
+      "location": "Atlantic",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 7000,
+      "dueEpoch": 4,
+      "penaltyBps": 600
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "atlantic-discharge",
+      "routeId": "atlantic-001",
+      "sequence": 3,
+      "leg": "destination-discharge",
+      "location": "Newark",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 2500,
+      "dueEpoch": 5,
+      "penaltyBps": 500
+    }
+  ]
+}

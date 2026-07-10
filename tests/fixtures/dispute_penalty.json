@@ -1,0 +1,114 @@
+{
+  "name": "dispute-penalty",
+  "assets": [
+    {
+      "id": "usdc",
+      "symbol": "USDC",
+      "decimals": 6
+    }
+  ],
+  "accounts": [
+    {
+      "id": "shipper-norte",
+      "role": "shipper",
+      "displayName": "Norte Export Desk"
+    },
+    {
+      "id": "carrier-azul",
+      "role": "carrier",
+      "displayName": "Azul Ocean Line"
+    },
+    {
+      "id": "operator-quay",
+      "role": "operator",
+      "displayName": "Quay Settlement Ops"
+    },
+    {
+      "id": "custodian-lisbon",
+      "role": "custodian",
+      "displayName": "Lisbon Survey Agent"
+    }
+  ],
+  "steps": [
+    {
+      "action": "deposit",
+      "accountId": "shipper-norte",
+      "asset": "usdc",
+      "amount": 15000
+    },
+    {
+      "action": "create_route",
+      "routeId": "baltic-204",
+      "asset": "usdc",
+      "shipperId": "shipper-norte",
+      "operatorId": "operator-quay",
+      "originPort": "Gdansk",
+      "destinationPort": "Rotterdam",
+      "vessel": "MV Baltic Ledger",
+      "billOfLading": "BOL-BAL-204",
+      "rebateBudget": 600,
+      "rebateBasisBps": 500,
+      "minProgressBps": 2500,
+      "cancellationPenaltyBps": 500
+    },
+    {
+      "action": "fund_escrow",
+      "routeId": "baltic-204",
+      "amount": 12000
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "baltic-feeder-leg",
+      "routeId": "baltic-204",
+      "sequence": 1,
+      "leg": "feeder-load",
+      "location": "Gdansk",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 3000,
+      "dueEpoch": 2,
+      "penaltyBps": 500
+    },
+    {
+      "action": "add_milestone",
+      "milestoneId": "baltic-main-leg",
+      "routeId": "baltic-204",
+      "sequence": 2,
+      "leg": "mainline-crossing",
+      "location": "Baltic Sea",
+      "carrierId": "carrier-azul",
+      "custodianId": "custodian-lisbon",
+      "amount": 9000,
+      "dueEpoch": 5,
+      "penaltyBps": 500
+    },
+    {
+      "action": "issue_certificate",
+      "certificateId": "cert-baltic-feeder",
+      "routeId": "baltic-204",
+      "milestoneId": "baltic-feeder-leg",
+      "custodianId": "custodian-lisbon",
+      "documentHash": "balticfeedercert001"
+    },
+    {
+      "action": "release_milestone",
+      "routeId": "baltic-204",
+      "milestoneId": "baltic-feeder-leg"
+    },
+    {
+      "action": "open_dispute",
+      "disputeId": "disp-baltic-main",
+      "routeId": "baltic-204",
+      "milestoneId": "baltic-main-leg",
+      "claimantId": "operator-quay",
+      "amount": 9000,
+      "reason": "terminal exception while awaiting final papers"
+    },
+    {
+      "action": "cancel_milestone",
+      "routeId": "baltic-204",
+      "milestoneId": "baltic-main-leg",
+      "penaltyBps": 500
+    }
+  ]
+}
