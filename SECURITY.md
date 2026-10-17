@@ -1,31 +1,71 @@
-# Security Model
+# Política de seguridad
 
-MarinerDTL asume un entorno de settlement coordinado por operadores autorizados,
-custodios logisticos y cuentas de tesoreria. Los escenarios locales modelan
-validaciones economicas esperadas sin depender de infraestructura externa.
+MarinerDTL procesa reglas de settlement, custodia y capital. Los cambios sobre rutas económicas requieren revisión explícita, pruebas de reconciliación y evidencia reproducible antes de incorporarse a una versión.
 
-## Invariantes Esperadas
+## Versiones mantenidas
 
-- Los escrows de ruta deben estar financiados antes de bloquear hitos.
-- Un hito solo puede liberarse con certificado emitido por su custodian.
-- Las disputas abiertas deben impedir la liberacion directa del hito afectado.
-- Las cancelaciones deben reconciliar refund, penalty y saldo reservado.
-- Los rebates deben pagarse desde una cuenta de tesoreria con saldo suficiente.
-- El journal debe conservar trazabilidad para cada movimiento economico.
+| Versión | Estado           | Mantenimiento                          |
+| ------- | ---------------- | -------------------------------------- |
+| 1.0.x   | Estable          | Correcciones de seguridad e integridad |
+| < 1.0   | Fuera de soporte | Sin actualizaciones                    |
 
-## Validaciones Automatizadas
+## Límites de confianza
 
-La suite de tests TypeScript ejecuta fixtures de registro, funding, liberacion,
-disputa, penalizacion y cancelacion. El CI local tambien ejecuta `gofmt`,
-`go vet`, build del binario y comprobacion de LOC en `src/`.
+```mermaid
+flowchart TB
+    Untrusted[Scenario / HTTP input] --> Decode[Strict decoding]
+    Decode --> Policy[Policy validation]
+    Policy --> Engine[Command boundary]
+    Engine --> Plans[Pure settlement plans]
+    Plans --> Journal[Append-only journal]
+    Journal --> State[(State)]
+    State --> Snapshot[Read-only projection]
+    Snapshot --> Risk[Risk and capital]
+    Secrets[Deployment secrets] -. never enter .-> Scenario
+```
 
-## Dependencias
+```mermaid
+flowchart LR
+    Change[Code change] --> Unit[Go unit tests]
+    Unit --> Integration[Scenario tests]
+    Integration --> Invariants[Accounting invariants]
+    Invariants --> Hashes[Protected source manifest]
+    Hashes --> Matrix[Linux + Windows]
+    Matrix --> Release[Tagged release]
+```
 
-El core Go no usa dependencias externas. Las dependencias Node solo se emplean
-para tests, formato y ejecucion TypeScript.
+## Invariantes de mayor criticidad
 
-## Alcance De Revision
+- Ningún saldo disponible, reservado o de escrow puede ser negativo.
+- Un movimiento de salida debe tener contrapartida identificable en el journal.
+- El valor de un hito no puede superarse mediante liberación, cancelación y penalización combinadas.
+- Un certificado solo vincula el custodio y el hito declarados.
+- El presupuesto reclamado de rebate no puede exceder el presupuesto configurado.
+- Los informes de riesgo son proyecciones de solo lectura y no mutan el estado económico.
+- Los importes usan enteros; no se aceptan operaciones con coma flotante.
 
-El alcance principal es la logica economica del servicio: estado de rutas,
-escrow, certificados, disputas, rebates y reportes. Los fixtures son
-deterministas para facilitar reproduccion en auditoria.
+## Controles de desarrollo
+
+1. `go test ./...` valida lógica unitaria y cálculos de riesgo.
+2. `go vet ./...` comprueba construcciones sospechosas del código Go.
+3. Las pruebas TypeScript ejecutan el binario real contra fixtures JSON.
+4. El workflow compara el manifiesto de fuentes económicas protegidas.
+5. El control de release exige banner, documentación, versión y tag coherentes.
+6. La matriz ejecuta los mismos contratos en Linux y Windows.
+
+## Comunicación responsable
+
+No publique detalles técnicos sensibles en un issue. Use el canal privado de seguridad de GitHub del repositorio e incluya:
+
+- versión y commit afectados;
+- componente y precondiciones;
+- impacto económico u operativo observado;
+- pasos mínimos de reproducción;
+- resultado esperado y resultado obtenido;
+- propuesta de contención, si existe.
+
+Se acusará recibo, se verificará el alcance y se coordinará una corrección antes de cualquier comunicación pública.
+
+## Despliegue
+
+El servicio no incorpora gestión de identidad, almacenamiento persistente ni transporte TLS. Esas capacidades pertenecen a la plataforma que lo aloje. Toda exposición de la API debe situarse detrás de autenticación, autorización por rol, limitación de tasa, TLS y registro centralizado. Nunca deben enviarse secretos en escenarios, metadatos o eventos.

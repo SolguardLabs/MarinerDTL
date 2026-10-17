@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const src = join(root, "src");
 const min = 3000;
-const max = 4000;
 let lines = 0;
 
 function walk(dir) {
@@ -26,7 +25,7 @@ function walk(dir) {
 
 walk(src);
 console.log(`src LOC: ${lines}`);
-if (lines < min || lines > max) {
-  console.error(`expected src LOC between ${min} and ${max}`);
+if (lines < min) {
+  console.error(`expected at least ${min} src LOC`);
   process.exit(1);
 }

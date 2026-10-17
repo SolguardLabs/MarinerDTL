@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"marinerdtl/src/money"
+	"marinerdtl/src/risk"
 	"marinerdtl/src/scenario"
 )
 
@@ -23,6 +25,36 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /healthz", s.health)
 	s.mux.HandleFunc("POST /v1/scenario/run", s.runScenario)
 	s.mux.HandleFunc("POST /v1/scenario/validate", s.validateScenario)
+	s.mux.HandleFunc("POST /v1/risk/analyze", s.analyzeRisk)
+}
+
+type riskRequest struct {
+	Scenario         scenario.Scenario `json:"scenario"`
+	AvailableCapital money.Amount      `json:"availableCapital"`
+	Profile          string            `json:"profile"`
+}
+
+func (s *Server) analyzeRisk(w http.ResponseWriter, r *http.Request) {
+	var body riskRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	result, err := body.Scenario.Run(false)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	profile := risk.OperatingScenario()
+	if strings.EqualFold(strings.TrimSpace(body.Profile), "severe") {
+		profile = risk.SevereScenario()
+	}
+	report, err := risk.MustAnalyzer(profile).AnalyzeState(result.Service.State(), body.AvailableCapital)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, report)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
