@@ -78,6 +78,30 @@ export type MarinerReport = {
   auditIssues: Array<{ code: string; severity: string; message: string }>;
 };
 
+export type RiskReport = {
+  scenario: string;
+  grossValue: number;
+  atRiskValue: number;
+  capital: {
+    requiredCapital: number;
+    targetCapital: number;
+    availableCapital: number;
+    capitalSurplus: number;
+    capitalShortfall: number;
+    coverageBps: number;
+  };
+  routes: Array<{
+    routeId: string;
+    grossValue: number;
+    atRiskValue: number;
+    capitalCharge: number;
+    portfolioShareBps: number;
+    severity: string;
+  }>;
+  findings: Array<{ code: string; severity: string; subject: string; message: string }>;
+  digest: string;
+};
+
 export const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const binary = join(
   root,
@@ -119,6 +143,14 @@ export function validateFixture(name: string): { status: string; issues: unknown
     status: string;
     issues: unknown[];
   };
+}
+
+export function analyzeFixture(name: string, capital: number, severe = false): RiskReport {
+  const args = ["risk", join("tests", "fixtures", name), "--capital", String(capital), "--json"];
+  if (severe) {
+    args.push("--severe");
+  }
+  return JSON.parse(runCli(args)) as RiskReport;
 }
 
 export function byId<T extends { id: string }>(items: T[], id: string): T {

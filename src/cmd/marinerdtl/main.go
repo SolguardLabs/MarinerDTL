@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"marinerdtl/src/api"
+	"marinerdtl/src/money"
+	"marinerdtl/src/risk"
 	"marinerdtl/src/scenario"
 )
 
@@ -29,11 +31,62 @@ func run(args []string) error {
 		return validateScenario(args[1:])
 	case "serve":
 		return serve(args[1:])
+	case "risk":
+		return runRisk(args[1:])
 	case "help", "-h", "--help":
 		return usage()
 	default:
 		return fmt.Errorf("unknown command %q", args[0])
 	}
+}
+
+func runRisk(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("risk requires a scenario file")
+	}
+	path := args[0]
+	capital := money.Zero
+	profile := risk.OperatingScenario()
+	pretty := true
+	for index := 1; index < len(args); index++ {
+		switch args[index] {
+		case "--capital":
+			if index+1 >= len(args) {
+				return fmt.Errorf("--capital requires a value")
+			}
+			parsed, err := money.Parse(args[index+1])
+			if err != nil {
+				return fmt.Errorf("invalid capital: %w", err)
+			}
+			capital = parsed
+			index++
+		case "--severe":
+			profile = risk.SevereScenario()
+		case "--json":
+			pretty = false
+		default:
+			return fmt.Errorf("unknown risk flag %q", args[index])
+		}
+	}
+	result, err := scenario.RunFile(path, false)
+	if err != nil {
+		return err
+	}
+	report, err := risk.MustAnalyzer(profile).AnalyzeState(result.Service.State(), capital)
+	if err != nil {
+		return err
+	}
+	var encoded []byte
+	if pretty {
+		encoded, err = json.MarshalIndent(report, "", "  ")
+	} else {
+		encoded, err = json.Marshal(report)
+	}
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(encoded))
+	return nil
 }
 
 func runScenario(args []string) error {
@@ -123,6 +176,7 @@ func usage() error {
 	fmt.Println("Usage:")
 	fmt.Println("  marinerdtl run <scenario.json> [--json] [--events]")
 	fmt.Println("  marinerdtl validate <scenario.json> [--json]")
+	fmt.Println("  marinerdtl risk <scenario.json> --capital <amount> [--severe] [--json]")
 	fmt.Println("  marinerdtl serve [--addr 127.0.0.1:8092]")
 	return nil
 }

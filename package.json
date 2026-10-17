@@ -8,8 +8,11 @@
     "test": "npm run build && node --experimental-strip-types --test \"tests/node/*.test.ts\"",
     "check": "tsc --noEmit",
     "format": "prettier --check .",
+    "gofmt:check": "node scripts/gofmt-check.mjs",
     "loc": "node scripts/check-loc.mjs",
-    "ci": "bash scripts/ci.sh"
+    "scan:public": "node scripts/scan-public.mjs",
+    "release:check": "node scripts/release-integrity.mjs",
+    "ci": "node scripts/ci.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.0",
