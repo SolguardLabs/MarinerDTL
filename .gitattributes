@@ -1,5 +1,6 @@
 * text=auto
 .gitattributes text eol=lf
+.prettierrc text eol=lf
 Makefile text eol=lf
 *.go text eol=lf
 *.mjs text eol=lf
