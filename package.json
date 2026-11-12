@@ -15,8 +15,8 @@
     "ci": "node scripts/ci.mjs"
   },
   "devDependencies": {
-    "@types/node": "^26.6.0",
-    "prettier": "^3.9.10",
+    "@types/node": "^26.6.6",
+    "prettier": "^3.9.6",
     "typescript": "^7.0.2"
   }
 }
